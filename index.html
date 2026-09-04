@@ -15,8 +15,8 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #030005;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -39,7 +39,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #000;
+            background-color: #030005;
             color: #fff;
             z-index: 999;
             flex-direction: column;
@@ -52,14 +52,14 @@
         #rotate-notice svg {
             width: 60px;
             height: 60px;
-            fill: #fff;
+            fill: #ff4d6d;
             margin-bottom: 15px;
             animation: rotateIcon 2s infinite ease-in-out;
         }
 
         #rotate-notice p {
             font-size: 1.1rem;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(255, 255, 255, 0.9);
         }
 
         @keyframes rotateIcon {
@@ -71,23 +71,24 @@
         #start-btn {
             position: absolute;
             z-index: 10;
-            padding: 16px 36px;
-            font-size: 1.2rem;
+            padding: 16px 38px;
+            font-size: 1.25rem;
             font-weight: 600;
+            letter-spacing: 1px;
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 30px;
+            background: linear-gradient(135deg, rgba(255, 77, 109, 0.35), rgba(255, 143, 163, 0.2));
+            border: 1px solid rgba(255, 182, 193, 0.6);
+            border-radius: 35px;
             cursor: pointer;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 4px 25px rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 25px rgba(255, 77, 109, 0.4);
             transition: all 0.3s ease;
         }
 
         #start-btn:active {
             transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 35px rgba(255, 77, 109, 0.7);
         }
     </style>
 </head>
@@ -97,7 +98,7 @@
         <svg viewBox="0 0 24 24">
             <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
         </svg>
-        <p>Vui lòng xoay ngang thiết bị của bạn</p>
+        <p>Vui lòng xoay ngang thiết bị của bạn ❤️</p>
     </div>
 
     <button id="start-btn">Nhấn vào đây ❤️</button>
@@ -136,7 +137,7 @@
             initMatrix();
         });
 
-        // 1. Kịch bản câu chữ (Số 3, 2, 1 đếm đúng 1s)
+        // 1. Kịch bản lời tỏ tình
         const timeline = [
             { text: "3", duration: 1000 },
             { text: "2", duration: 1000 },
@@ -144,16 +145,18 @@
             { text: "Anh thật sự thích em", duration: 2500 },
             { text: "Anh muốn yêu em nghiêm túc", duration: 2600 },
             { text: "Em đồng ý...", duration: 2300 },
-            { text: "Làm người yêu anh nhé", duration: 2800 }
+            { text: "Làm người yêu anh nhé ❤️", duration: 2800 }
         ];
 
         let msgIndex = 0;
         let isRunning = false;
         let isHeartPhase = false;
+        let pulseTime = 0;
+        let textGlowTimer = 0;
 
-        // 2. Matrix Rain Nền (màu trắng mờ)
+        // 2. Matrix Rain Nền (Chạy liên tục xuyên suốt)
         let matrixDrops = [];
-        const matrixChars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*";
+        const matrixChars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*❤️";
 
         function initMatrix() {
             const columns = Math.floor(width / 18);
@@ -164,10 +167,10 @@
         }
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillStyle = 'rgba(3, 0, 5, 0.22)';
             ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillStyle = 'rgba(255, 182, 193, 0.28)'; // Mưa mã màu hồng mờ dịu
             ctx.font = '14px monospace';
 
             for (let i = 0; i < matrixDrops.length; i++) {
@@ -184,9 +187,46 @@
             }
         }
 
-        // 3. Hạt biến đổi chữ & Trái tim viền mã ký tự lấp lánh
+        // Hàm vẽ hình trái tim nhỏ chuẩn canvas
+        function drawSmallHeart(cx, cy, size, color, alpha) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, alpha);
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+
+            ctx.beginPath();
+            const topCurveHeight = size * 0.3;
+            ctx.moveTo(cx, cy + size * 0.3);
+            // Nửa bên trái
+            ctx.bezierCurveTo(
+                cx, cy, 
+                cx - size / 2, cy - size / 2, 
+                cx - size / 2, cy + topCurveHeight / 2
+            );
+            ctx.bezierCurveTo(
+                cx - size / 2, cy + (size + topCurveHeight) / 2, 
+                cx, cy + size, 
+                cx, cy + size
+            );
+            // Nửa bên phải
+            ctx.bezierCurveTo(
+                cx, cy + size, 
+                cx + size / 2, cy + (size + topCurveHeight) / 2, 
+                cx + size / 2, cy + topCurveHeight / 2
+            );
+            ctx.bezierCurveTo(
+                cx + size / 2, cy - size / 2, 
+                cx, cy, 
+                cx, cy + size * 0.3
+            );
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // 3. Hạt hội tụ chữ & Trái tim viền các Trái tim nhỏ lấp lánh
         let particles = [];
-        let heartCharParticles = [];
+        let heartOutlineHearts = [];
         let isExploding = false;
 
         function createTextParticles(text) {
@@ -225,40 +265,46 @@
                             vx: 0,
                             vy: 0,
                             size: 1.8,
-                            alpha: 1
+                            alpha: 1,
+                            color: text.length <= 2 ? '#ff4d6d' : '#ffffff'
                         });
                     }
                 }
             }
         }
 
-        // Tạo Trái tim viền bằng ký tự/mã số nhấp nháy lấp lánh như video
-        function setupHeartStage() {
-            heartCharParticles = [];
+        // Khởi tạo trái tim lớn có viền được xếp bằng các TRÁI TIM NHỎ lấp lánh
+        function setupHeartPhase() {
+            heartOutlineHearts = [];
             isHeartPhase = true;
 
             const scale = Math.min(width, height) / 32;
-            const count = 550; // Số lượng vị trí ký tự tạo thành viền trái tim
+            const count = 180; // Số lượng trái tim nhỏ trên đường viền
 
             for (let i = 0; i < count; i++) {
                 const t = (i / count) * Math.PI * 2;
-                // Hàm trái tim toán học
+                // Công thức đường cong trái tim
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                // Độ lệch nhẹ tạo độ dày dặn cho viền trái tim
-                const scatterX = (Math.random() - 0.5) * 0.6;
-                const scatterY = (Math.random() - 0.5) * 0.6;
+                // Độ lệch ngẫu nhiên nhẹ tạo đường viền tự nhiên & dặn đặn
+                const scatterX = (Math.random() - 0.5) * 0.5;
+                const scatterY = (Math.random() - 0.5) * 0.5;
 
-                heartCharParticles.push({
+                // Màu sắc chuyển đổi giữa Hồng Neon, Đỏ Tình Yêu & Trắng Lấp Lánh
+                let hColor = '#ff4d6d';
+                if (Math.random() > 0.45) hColor = '#ff8fa3';
+                if (Math.random() > 0.8) hColor = '#ffffff';
+
+                heartOutlineHearts.push({
+                    baseX: (x + scatterX) * scale,
+                    baseY: (y + scatterY) * scale,
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    targetX: width / 2 + (x + scatterX) * scale,
-                    targetY: height / 2 + (y + scatterY) * scale,
-                    char: matrixChars.charAt(Math.floor(Math.random() * matrixChars.length)),
-                    alpha: Math.random(),
-                    twinkleSpeed: Math.random() * 0.08 + 0.02,
-                    fontSize: Math.floor(Math.random() * 6) + 12
+                    size: Math.random() * 8 + 7, // Kích thước trái tim nhỏ
+                    alpha: Math.random() * 0.8 + 0.2,
+                    twinkleSpeed: Math.random() * 0.05 + 0.02,
+                    color: hColor
                 });
             }
         }
@@ -284,45 +330,61 @@
                     }
 
                     if (p.alpha > 0) {
-                        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, p.alpha)})`;
+                        ctx.save();
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = p.color;
+                        ctx.fillStyle = p.color;
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                         ctx.fill();
+                        ctx.restore();
                     }
                 }
             } else {
-                // Vẽ Viền Trái tim bằng các Mã số/Ký tự lấp lánh liên tục
-                for (let hp of heartCharParticles) {
-                    hp.x += (hp.targetX - hp.x) * 0.1;
-                    hp.y += (hp.targetY - hp.y) * 0.1;
+                pulseTime += 0.035;
+                textGlowTimer += 0.05;
+
+                // Nhịp đập trái tim phập phồng nhẹ nhàng lãng mạn
+                const beatScale = 1 + Math.sin(pulseTime) * 0.03;
+
+                // 1. Vẽ các TRÁI TIM NHỎ tạo thành đường viền trái tim lớn
+                for (let hp of heartOutlineHearts) {
+                    const targetX = width / 2 + hp.baseX * beatScale;
+                    const targetY = height / 2 + hp.baseY * beatScale;
+
+                    hp.x += (targetX - hp.x) * 0.1;
+                    hp.y += (targetY - hp.y) * 0.1;
 
                     hp.alpha += hp.twinkleSpeed;
-                    if (hp.alpha > 1 || hp.alpha < 0.2) {
+                    if (hp.alpha > 1 || hp.alpha < 0.25) {
                         hp.twinkleSpeed = -hp.twinkleSpeed;
-                        // Thỉnh thoảng đổi ký tự để tạo hiệu ứng chạy mã sinh động
-                        if (Math.random() > 0.6) {
-                            hp.char = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
-                        }
                     }
 
-                    ctx.save();
-                    ctx.font = `bold ${hp.fontSize}px monospace`;
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
-                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(hp.alpha)})`;
-                    ctx.fillText(hp.char, hp.x, hp.y);
-                    ctx.restore();
+                    drawSmallHeart(hp.x, hp.y, hp.size, hp.color, hp.alpha);
                 }
 
-                // Vẽ dòng chữ "Anh Yêu Linh" phát sáng rõ nét giữa lòng trái tim
+                // 2. Vẽ chữ "Anh Yêu Linh" NỔI BẬT & LẤP LÁNH ở trung tâm trái tim
                 ctx.save();
-                let fontSize = Math.min(width / 14, 40);
+                let fontSize = Math.min(width / 12, 48); // Font to rõ hơn
                 ctx.font = `bold ${fontSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.shadowBlur = 16;
-                ctx.shadowColor = '#ffffff';
-                ctx.fillStyle = '#ffffff';
+
+                // Độ phát sáng lấp lánh biến đổi theo thời gian
+                const glowIntensity = 15 + Math.sin(textGlowTimer) * 10;
+                ctx.shadowBlur = glowIntensity;
+                ctx.shadowColor = '#ff4d6d';
+
+                // Gradient màu chữ Hồng Trắng Ánh Kim rực rỡ
+                const gradient = ctx.createLinearGradient(
+                    width / 2 - 100, height / 2 - 20, 
+                    width / 2 + 100, height / 2 + 20
+                );
+                gradient.addColorStop(0, '#ffffff');
+                gradient.addColorStop(0.5, '#ffb6c1');
+                gradient.addColorStop(1, '#ffffff');
+
+                ctx.fillStyle = gradient;
                 ctx.fillText("Anh Yêu Linh", width / 2, height / 2);
                 ctx.restore();
             }
@@ -341,7 +403,7 @@
                     setTimeout(processNextStep, dissolveTime);
                 }, current.duration - dissolveTime);
             } else {
-                setupHeartStage();
+                setupHeartPhase();
             }
         }
 
