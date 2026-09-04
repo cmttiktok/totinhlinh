@@ -1,0 +1,2 @@
+# totinhlinh
+to tinh linh
