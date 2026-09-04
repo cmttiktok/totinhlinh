@@ -16,7 +16,7 @@
             height: 100%;
             overflow: hidden;
             background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -32,7 +32,6 @@
             z-index: 1;
         }
 
-        /* Màn hình nhắc xoay ngang màn hình */
         #rotate-notice {
             display: none;
             position: fixed;
@@ -53,15 +52,14 @@
         #rotate-notice svg {
             width: 60px;
             height: 60px;
-            fill: #ffffff;
+            fill: #fff;
             margin-bottom: 15px;
             animation: rotateIcon 2s infinite ease-in-out;
         }
 
         #rotate-notice p {
             font-size: 1.1rem;
-            letter-spacing: 0.5px;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.85);
         }
 
         @keyframes rotateIcon {
@@ -73,24 +71,23 @@
         #start-btn {
             position: absolute;
             z-index: 10;
-            padding: 16px 38px;
+            padding: 16px 36px;
             font-size: 1.2rem;
-            font-weight: 500;
-            letter-spacing: 1px;
+            font-weight: 600;
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 35px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
             cursor: pointer;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 4px 30px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 25px rgba(255, 255, 255, 0.25);
             transition: all 0.3s ease;
         }
 
         #start-btn:active {
             transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
@@ -137,28 +134,26 @@
         window.addEventListener('resize', () => {
             setupCanvas();
             initMatrix();
-            initSparkles();
         });
 
-        // 1. Danh sách câu hiển thị & thời gian (Số 3, 2, 1 đếm chuẩn 1s)
+        // 1. Kịch bản câu chữ (Số 3, 2, 1 đếm đúng 1s)
         const timeline = [
             { text: "3", duration: 1000 },
             { text: "2", duration: 1000 },
             { text: "1", duration: 1000 },
             { text: "Anh thật sự thích em", duration: 2500 },
             { text: "Anh muốn yêu em nghiêm túc", duration: 2600 },
-            { text: "Em đồng ý...", duration: 2200 },
+            { text: "Em đồng ý...", duration: 2300 },
             { text: "Làm người yêu anh nhé", duration: 2800 }
         ];
 
         let msgIndex = 0;
         let isRunning = false;
         let isHeartPhase = false;
-        let pulseTime = 0;
 
-        // 2. Ma trận số (Matrix Rain) chuẩn màu silver/trắng rơi liên tục
+        // 2. Matrix Rain Nền (màu trắng mờ)
         let matrixDrops = [];
-        const chars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*";
+        const matrixChars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*";
 
         function initMatrix() {
             const columns = Math.floor(width / 18);
@@ -169,14 +164,14 @@
         }
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = 'rgba(220, 225, 235, 0.4)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.font = '14px monospace';
 
             for (let i = 0; i < matrixDrops.length; i++) {
-                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
                 const x = i * 18;
                 const y = matrixDrops[i] * 18;
 
@@ -189,52 +184,9 @@
             }
         }
 
-        // 3. Hiệu ứng Ngôi sao 4 cánh lấp lánh (✨ Sparkle Stars)
-        let sparkles = [];
-        function initSparkles() {
-            sparkles = [];
-            for (let i = 0; i < 60; i++) {
-                sparkles.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    size: Math.random() * 6 + 3,
-                    alpha: Math.random(),
-                    speed: Math.random() * 0.03 + 0.01,
-                    color: Math.random() > 0.3 ? '#ffffff' : '#ffc0cb'
-                });
-            }
-        }
-
-        // Vẽ ngôi sao 4 cánh lấp lánh chuẩn video
-        function draw4PointStar(cx, cy, size, color, alpha) {
-            ctx.save();
-            ctx.globalAlpha = Math.max(0, alpha);
-            ctx.fillStyle = color;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = color;
-
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - size);
-            ctx.quadraticCurveTo(cx, cy, cx + size, cy);
-            ctx.quadraticCurveTo(cx, cy, cx, cy + size);
-            ctx.quadraticCurveTo(cx, cy, cx - size, cy);
-            ctx.quadraticCurveTo(cx, cy, cx, cy - size);
-            ctx.fill();
-            ctx.restore();
-        }
-
-        function drawSparkles() {
-            for (let s of sparkles) {
-                s.alpha += s.speed;
-                if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
-                draw4PointStar(s.x, s.y, s.size, s.color, s.alpha);
-            }
-        }
-
-        // 4. Các hạt ghép thành Chữ & Trái tim
+        // 3. Hạt biến đổi chữ & Trái tim viền mã ký tự lấp lánh
         let particles = [];
-        let heartOutlineParticles = [];
-        let heartSparkleParticles = [];
+        let heartCharParticles = [];
         let isExploding = false;
 
         function createTextParticles(text) {
@@ -250,7 +202,7 @@
             offCtx.fillRect(0, 0, width, height);
 
             let fontSize = Math.min(width / (text.length * 0.7), 65);
-            if (text.length <= 2) fontSize = 120; // Số 3, 2, 1 to rõ
+            if (text.length <= 2) fontSize = 120;
 
             offCtx.fillStyle = '#fff';
             offCtx.font = `bold ${fontSize}px sans-serif`;
@@ -280,44 +232,33 @@
             }
         }
 
-        // Khởi tạo Trái tim viền lấp lánh chuẩn như trong video
-        function setupHeartPhase() {
-            heartOutlineParticles = [];
-            heartSparkleParticles = [];
+        // Tạo Trái tim viền bằng ký tự/mã số nhấp nháy lấp lánh như video
+        function setupHeartStage() {
+            heartCharParticles = [];
             isHeartPhase = true;
 
-            const scale = Math.min(width, height) / 30;
-            const particleCount = 1200;
+            const scale = Math.min(width, height) / 32;
+            const count = 550; // Số lượng vị trí ký tự tạo thành viền trái tim
 
-            // Dãy hạt tạo đường viền & độ dày trái tim
-            for (let i = 0; i < particleCount; i++) {
-                const t = Math.random() * Math.PI * 2;
-                const offset = (Math.random() - 0.5) * 0.8;
-                const x = 16 * Math.pow(Math.sin(t), 3) + offset;
-                const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) + offset;
-
-                heartOutlineParticles.push({
-                    baseX: x * scale,
-                    baseY: y * scale,
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    size: Math.random() * 2 + 1,
-                    alpha: Math.random() * 0.7 + 0.3
-                });
-            }
-
-            // Hạt ngôi sao 4 cánh nhấp nháy trên đường viền trái tim
-            for (let i = 0; i < 40; i++) {
-                const t = Math.random() * Math.PI * 2;
+            for (let i = 0; i < count; i++) {
+                const t = (i / count) * Math.PI * 2;
+                // Hàm trái tim toán học
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                heartSparkleParticles.push({
-                    baseX: x * scale,
-                    baseY: y * scale,
-                    size: Math.random() * 5 + 3,
+                // Độ lệch nhẹ tạo độ dày dặn cho viền trái tim
+                const scatterX = (Math.random() - 0.5) * 0.6;
+                const scatterY = (Math.random() - 0.5) * 0.6;
+
+                heartCharParticles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    targetX: width / 2 + (x + scatterX) * scale,
+                    targetY: height / 2 + (y + scatterY) * scale,
+                    char: matrixChars.charAt(Math.floor(Math.random() * matrixChars.length)),
                     alpha: Math.random(),
-                    speed: Math.random() * 0.04 + 0.02
+                    twinkleSpeed: Math.random() * 0.08 + 0.02,
+                    fontSize: Math.floor(Math.random() * 6) + 12
                 });
             }
         }
@@ -350,46 +291,37 @@
                     }
                 }
             } else {
-                pulseTime += 0.03;
-                const beatScale = 1 + Math.sin(pulseTime) * 0.025; // Nhịp đập phập phồng nhẹ
+                // Vẽ Viền Trái tim bằng các Mã số/Ký tự lấp lánh liên tục
+                for (let hp of heartCharParticles) {
+                    hp.x += (hp.targetX - hp.x) * 0.1;
+                    hp.y += (hp.targetY - hp.y) * 0.1;
 
-                // 1. Vẽ các hạt viền Trái tim
-                for (let hp of heartOutlineParticles) {
-                    const targetX = width / 2 + hp.baseX * beatScale;
-                    const targetY = height / 2 + hp.baseY * beatScale;
-
-                    hp.x += (targetX - hp.x) * 0.1;
-                    hp.y += (targetY - hp.y) * 0.1;
+                    hp.alpha += hp.twinkleSpeed;
+                    if (hp.alpha > 1 || hp.alpha < 0.2) {
+                        hp.twinkleSpeed = -hp.twinkleSpeed;
+                        // Thỉnh thoảng đổi ký tự để tạo hiệu ứng chạy mã sinh động
+                        if (Math.random() > 0.6) {
+                            hp.char = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+                        }
+                    }
 
                     ctx.save();
-                    ctx.shadowBlur = 8;
-                    ctx.shadowColor = '#ffffff';
-                    ctx.fillStyle = `rgba(255, 255, 255, ${hp.alpha})`;
-                    ctx.beginPath();
-                    ctx.arc(hp.x, hp.y, hp.size, 0, Math.PI * 2);
-                    ctx.fill();
+                    ctx.font = `bold ${hp.fontSize}px monospace`;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(hp.alpha)})`;
+                    ctx.fillText(hp.char, hp.x, hp.y);
                     ctx.restore();
                 }
 
-                // 2. Vẽ các Ngôi sao lấp lánh ✨ đính trên viền trái tim
-                for (let sp of heartSparkleParticles) {
-                    const spX = width / 2 + sp.baseX * beatScale;
-                    const spY = height / 2 + sp.baseY * beatScale;
-
-                    sp.alpha += sp.speed;
-                    if (sp.alpha > 1 || sp.alpha < 0) sp.speed = -sp.speed;
-
-                    draw4PointStar(spX, spY, sp.size, '#ffffff', sp.alpha);
-                }
-
-                // 3. Hiển thị dòng chữ "Anh Yêu Linh" giữa trái tim
+                // Vẽ dòng chữ "Anh Yêu Linh" phát sáng rõ nét giữa lòng trái tim
                 ctx.save();
                 let fontSize = Math.min(width / 14, 40);
                 ctx.font = `bold ${fontSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.shadowBlur = 18;
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+                ctx.shadowBlur = 16;
+                ctx.shadowColor = '#ffffff';
                 ctx.fillStyle = '#ffffff';
                 ctx.fillText("Anh Yêu Linh", width / 2, height / 2);
                 ctx.restore();
@@ -409,7 +341,7 @@
                     setTimeout(processNextStep, dissolveTime);
                 }, current.duration - dissolveTime);
             } else {
-                setupHeartPhase();
+                setupHeartStage();
             }
         }
 
@@ -417,7 +349,6 @@
             startBtn.style.display = 'none';
             isRunning = true;
             initMatrix();
-            initSparkles();
 
             setTimeout(() => {
                 processNextStep();
@@ -427,7 +358,6 @@
         function loop() {
             if (isRunning) {
                 drawMatrix();
-                drawSparkles();
                 drawParticles();
             }
             requestAnimationFrame(loop);
