@@ -138,7 +138,7 @@
             initSnowflakes();
         });
 
-        // Danh sách thông điệp & thời gian hiển thị riêng cho từng câu (ms)
+        // 1. Cấu hình kịch bản thời gian (Số đếm 3, 2, 1 chuẩn 1 giây = 1000ms)
         const timeline = [
             { text: "3", duration: 1000 },
             { text: "2", duration: 1000 },
@@ -146,13 +146,14 @@
             { text: "Anh thật sự thích em", duration: 2500 },
             { text: "Anh muốn yêu em nghiêm túc", duration: 2600 },
             { text: "Em đồng ý...", duration: 2300 },
-            { text: "Làm người yêu anh nhé ❤️", duration: 3000 }
+            { text: "Làm người yêu anh nhé ❤️", duration: 2800 }
         ];
 
         let msgIndex = 0;
         let isRunning = false;
+        let isHeartPhase = false;
 
-        // 1. Matrix Rain Nền
+        // 2. Matrix Rain Nền
         let matrixDrops = [];
         const chars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*";
 
@@ -185,7 +186,7 @@
             }
         }
 
-        // 2. Hiệu ứng Bông Tuyết rơi (Snowflakes)
+        // 3. Hiệu ứng Bông Tuyết rơi
         let snowflakes = [];
         function initSnowflakes() {
             snowflakes = [];
@@ -194,7 +195,7 @@
                 snowflakes.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    radius: Math.random() * 3 + 2, // Kích thước bông tuyết to rõ
+                    radius: Math.random() * 3 + 2,
                     speedY: Math.random() * 0.8 + 0.3,
                     speedX: Math.random() * 0.5 - 0.25,
                     alpha: Math.random() * 0.6 + 0.4
@@ -222,8 +223,10 @@
             }
         }
 
-        // 3. Hiệu ứng Hạt hội tụ & Tan biến (Dissolve Particle Effect)
+        // 4. Hạt chữ & Trái tim lấp lánh
         let particles = [];
+        let heartParticles = [];
+        let innerTextParticles = [];
         let isExploding = false;
 
         function createTextParticles(text) {
@@ -238,9 +241,8 @@
             offCtx.fillStyle = '#000';
             offCtx.fillRect(0, 0, width, height);
 
-            // Tăng font chữ to hơn hẳn
             let fontSize = Math.min(width / (text.length * 0.65), 65);
-            if (text.length <= 2) fontSize = 130; // Chữ số 3, 2, 1 rất to
+            if (text.length <= 2) fontSize = 130;
 
             offCtx.fillStyle = '#fff';
             offCtx.font = `bold ${fontSize}px sans-serif`;
@@ -270,32 +272,68 @@
             }
         }
 
-        function createHeartParticles() {
-            particles = [];
-            isExploding = false;
+        // Tạo Trái tim viền lấp lánh + Chữ "Anh Yêu Linh" ở giữa
+        function setupHeartStage() {
+            heartParticles = [];
+            innerTextParticles = [];
+            isHeartPhase = true;
 
-            const scale = Math.min(width, height) / 34;
-            const particleCount = 1400;
+            const scale = Math.min(width, height) / 32;
+            const count = 1200;
 
-            for (let i = 0; i < particleCount; i++) {
+            // 1. Tạo viền trái tim
+            for (let i = 0; i < count; i++) {
                 const t = Math.random() * Math.PI * 2;
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                particles.push({
+                heartParticles.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
                     targetX: width / 2 + x * scale,
                     targetY: height / 2 + y * scale,
-                    vx: 0,
-                    vy: 0,
-                    size: Math.random() * 2 + 1,
-                    alpha: 1
+                    size: Math.random() * 2.2 + 1,
+                    alpha: Math.random(),
+                    twinkleSpeed: Math.random() * 0.05 + 0.02
                 });
+            }
+
+            // 2. Tạo chữ "Anh Yêu Linh" bên trong trái tim
+            const offscreen = document.createElement('canvas');
+            offscreen.width = width;
+            offscreen.height = height;
+            const offCtx = offscreen.getContext('2d');
+
+            offCtx.fillStyle = '#000';
+            offCtx.fillRect(0, 0, width, height);
+
+            let fontSize = Math.min(width / 14, 42);
+            offCtx.fillStyle = '#fff';
+            offCtx.font = `bold ${fontSize}px sans-serif`;
+            offCtx.textAlign = 'center';
+            offCtx.textBaseline = 'middle';
+            offCtx.fillText("Anh Yêu Linh", width / 2, height / 2);
+
+            const imgData = offCtx.getImageData(0, 0, width, height).data;
+            const step = Math.max(2, Math.floor(width / 260));
+
+            for (let y = 0; y < height; y += step) {
+                for (let x = 0; x < width; x += step) {
+                    const idx = (y * width + x) * 4;
+                    if (imgData[idx] > 180) {
+                        innerTextParticles.push({
+                            x: Math.random() * width,
+                            y: Math.random() * height,
+                            targetX: x,
+                            targetY: y,
+                            size: 1.6,
+                            alpha: Math.random() * 0.5 + 0.5
+                        });
+                    }
+                }
             }
         }
 
-        // Kích hoạt hiệu ứng vỡ hạt tan biến
         function triggerDissolve() {
             isExploding = true;
             for (let p of particles) {
@@ -305,20 +343,47 @@
         }
 
         function drawParticles() {
-            for (let p of particles) {
-                if (!isExploding) {
-                    p.x += (p.targetX - p.x) * 0.14;
-                    p.y += (p.targetY - p.y) * 0.14;
-                } else {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.alpha -= 0.035; // Mờ dần khi vỡ ra
+            if (!isHeartPhase) {
+                for (let p of particles) {
+                    if (!isExploding) {
+                        p.x += (p.targetX - p.x) * 0.14;
+                        p.y += (p.targetY - p.y) * 0.14;
+                    } else {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.alpha -= 0.035;
+                    }
+
+                    if (p.alpha > 0) {
+                        ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, p.alpha)})`;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            } else {
+                // Vẽ viền Trái tim lấp lánh liên tục
+                for (let hp of heartParticles) {
+                    hp.x += (hp.targetX - hp.x) * 0.1;
+                    hp.y += (hp.targetY - hp.y) * 0.1;
+
+                    hp.alpha += hp.twinkleSpeed;
+                    if (hp.alpha > 1 || hp.alpha < 0.2) hp.twinkleSpeed = -hp.twinkleSpeed;
+
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(hp.alpha)})`;
+                    ctx.beginPath();
+                    ctx.arc(hp.x, hp.y, hp.size, 0, Math.PI * 2);
+                    ctx.fill();
                 }
 
-                if (p.alpha > 0) {
-                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, p.alpha)})`;
+                // Vẽ chữ "Anh Yêu Linh" bên trong trái tim
+                for (let tp of innerTextParticles) {
+                    tp.x += (tp.targetX - tp.x) * 0.1;
+                    tp.y += (tp.targetY - tp.y) * 0.1;
+
+                    ctx.fillStyle = `rgba(255, 255, 255, ${tp.alpha})`;
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.arc(tp.x, tp.y, tp.size, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
@@ -330,13 +395,14 @@
                 createTextParticles(current.text);
                 msgIndex++;
 
-                // Chờ hiển thị xong thì kích hoạt hiệu ứng tan biến trước khi sang câu mới
+                const dissolveTime = current.text.length <= 2 ? 150 : 400;
+
                 setTimeout(() => {
                     triggerDissolve();
-                    setTimeout(processNextStep, 450); // Khoảng dừng ngắn cho hiệu ứng tan biến
-                }, current.duration - 450);
+                    setTimeout(processNextStep, dissolveTime);
+                }, current.duration - dissolveTime);
             } else {
-                createHeartParticles();
+                setupHeartStage();
             }
         }
 
@@ -348,7 +414,7 @@
 
             setTimeout(() => {
                 processNextStep();
-            }, 1200);
+            }, 800);
         }
 
         function loop() {
