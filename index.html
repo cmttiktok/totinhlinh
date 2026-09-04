@@ -16,7 +16,7 @@
             height: 100%;
             overflow: hidden;
             background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -32,10 +32,48 @@
             z-index: 1;
         }
 
+        /* Màn hình nhắc xoay ngang thiết bị */
+        #rotate-notice {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #rotate-notice svg {
+            width: 60px;
+            height: 60px;
+            fill: #fff;
+            margin-bottom: 15px;
+            animation: rotateIcon 2s infinite ease-in-out;
+        }
+
+        #rotate-notice p {
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        @keyframes rotateIcon {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
         #start-btn {
             position: absolute;
             z-index: 10;
-            padding: 14px 28px;
+            padding: 14px 30px;
             font-size: 1.1rem;
             font-weight: 500;
             color: #ffffff;
@@ -45,17 +83,25 @@
             cursor: pointer;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
         }
 
         #start-btn:active {
             transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.3);
         }
     </style>
 </head>
 <body>
+
+    <!-- Thông báo xoay ngang -->
+    <div id="rotate-notice">
+        <svg viewBox="0 0 24 24">
+            <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+        </svg>
+        <p>Vui lòng xoay ngang thiết bị của bạn</p>
+    </div>
 
     <button id="start-btn">Nhấn vào đây ❤️</button>
     <canvas id="canvas"></canvas>
@@ -64,12 +110,12 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const startBtn = document.getElementById('start-btn');
+        const rotateNotice = document.getElementById('rotate-notice');
 
         let dpr = window.devicePixelRatio || 1;
         let width = window.innerWidth;
         let height = window.innerHeight;
 
-        // Cấu hình lại Canvas hỗ trợ màn hình độ phân giải cao (Retina/OLED mobile) giúp chữ nét căng
         function setupCanvas() {
             dpr = window.devicePixelRatio || 1;
             width = window.innerWidth;
@@ -77,12 +123,26 @@
             canvas.width = width * dpr;
             canvas.height = height * dpr;
             ctx.scale(dpr, dpr);
+            checkOrientation();
+        }
+
+        // Kiểm tra chiều màn hình (Nếu màn hình dọc thì hiện thông báo xoay)
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                rotateNotice.style.display = 'flex';
+            } else {
+                rotateNotice.style.display = 'none';
+            }
         }
 
         setupCanvas();
-        window.addEventListener('resize', setupCanvas);
+        window.addEventListener('resize', () => {
+            setupCanvas();
+            initMatrix();
+            initStars();
+        });
 
-        // Danh sách thông điệp hiển thị
+        // Danh sách nội dung hiển thị
         const messages = [
             "3",
             "2",
@@ -94,12 +154,15 @@
         ];
 
         let msgIndex = 0;
-        let state = 'IDLE'; // MATRIX, TEXT, HEART
+        let isRunning = false;
+        let isHeartState = false;
+
+        // 1. Cấu hình Matrix Rain (Mã trận)
         let matrixDrops = [];
         const chars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*";
 
         function initMatrix() {
-            const columns = Math.floor(width / 18);
+            const columns = Math.floor(width / 16);
             matrixDrops = [];
             for (let i = 0; i < columns; i++) {
                 matrixDrops[i] = Math.random() * -50;
@@ -107,16 +170,16 @@
         }
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '15px monospace';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.font = '14px monospace';
 
             for (let i = 0; i < matrixDrops.length; i++) {
                 const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                const x = i * 18;
-                const y = matrixDrops[i] * 18;
+                const x = i * 16;
+                const y = matrixDrops[i] * 16;
 
                 ctx.fillText(text, x, y);
 
@@ -127,10 +190,38 @@
             }
         }
 
-        // Tạo hạt hiển thị chữ sắc nét bằng canvas ẩn
-        let particles = [];
+        // 2. Cấu hình Ngôi sao lấp lánh (Sparkling Stars)
+        let stars = [];
+        function initStars() {
+            stars = [];
+            const starCount = 80;
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2 + 0.5,
+                    alpha: Math.random(),
+                    speed: Math.random() * 0.02 + 0.005
+                });
+            }
+        }
+
+        function drawStars() {
+            for (let s of stars) {
+                s.alpha += s.speed;
+                if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
+
+                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 3. Cấu hình Hạt đính kết tạo chữ và trái tim
+        let textParticles = [];
         function createTextParticles(text) {
-            particles = [];
+            textParticles = [];
             
             const offscreen = document.createElement('canvas');
             offscreen.width = width;
@@ -140,9 +231,8 @@
             offCtx.fillStyle = '#000';
             offCtx.fillRect(0, 0, width, height);
 
-            // Tự động tính kích thước chữ phù hợp màn hình điện thoại
-            let fontSize = Math.min(width / (text.length * 0.75), 45);
-            if (text.length <= 2) fontSize = 80; // Số đếm 3 2 1
+            let fontSize = Math.min(width / (text.length * 0.8), 50);
+            if (text.length <= 2) fontSize = 90;
 
             offCtx.fillStyle = '#fff';
             offCtx.font = `bold ${fontSize}px sans-serif`;
@@ -151,13 +241,13 @@
             offCtx.fillText(text, width / 2, height / 2);
 
             const imgData = offCtx.getImageData(0, 0, width, height).data;
-            const step = Math.max(2, Math.floor(width / 220)); // Khoảng cách hạt dày để chữ rõ nét
+            const step = Math.max(2, Math.floor(width / 220));
 
             for (let y = 0; y < height; y += step) {
                 for (let x = 0; x < width; x += step) {
                     const idx = (y * width + x) * 4;
                     if (imgData[idx] > 180) {
-                        particles.push({
+                        textParticles.push({
                             x: Math.random() * width,
                             y: Math.random() * height,
                             targetX: x,
@@ -170,9 +260,8 @@
             }
         }
 
-        // Tạo hình trái tim lung linh bằng hạt sáng
         function createHeartParticles() {
-            particles = [];
+            textParticles = [];
             const scale = Math.min(width, height) / 38;
             const particleCount = 1200;
 
@@ -181,7 +270,7 @@
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                particles.push({
+                textParticles.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
                     targetX: width / 2 + x * scale,
@@ -193,10 +282,7 @@
         }
 
         function drawParticles() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-            ctx.fillRect(0, 0, width, height);
-
-            for (let p of particles) {
+            for (let p of textParticles) {
                 p.x += (p.targetX - p.x) * 0.12;
                 p.y += (p.targetY - p.y) * 0.12;
 
@@ -210,30 +296,31 @@
         function showNextMessage() {
             if (msgIndex < messages.length) {
                 createTextParticles(messages[msgIndex]);
-                state = 'TEXT';
                 msgIndex++;
-                setTimeout(showNextMessage, 2600); // 2.6 giây đổi chữ 1 lần
+                setTimeout(showNextMessage, 2800);
             } else {
                 createHeartParticles();
-                state = 'HEART';
+                isHeartState = true;
             }
         }
 
         function startSequence() {
             startBtn.style.display = 'none';
+            isRunning = true;
             initMatrix();
-            state = 'MATRIX';
+            initStars();
 
             setTimeout(() => {
                 showNextMessage();
-            }, 2000);
+            }, 1800);
         }
 
+        // Vòng lặp Render liên tục
         function loop() {
-            if (state === 'MATRIX') {
-                drawMatrix();
-            } else if (state === 'TEXT' || state === 'HEART') {
-                drawParticles();
+            if (isRunning) {
+                drawMatrix();     // Nền số Matrix luôn chảy
+                drawStars();      // Các ngôi sao luôn lấp lánh
+                drawParticles();  // Chữ / Trái tim hội tụ
             }
             requestAnimationFrame(loop);
         }
