@@ -137,15 +137,15 @@
             initMatrix();
         });
 
-        // 1. Kịch bản lời tỏ tình
+        // 1. Kịch bản lời tỏ tình (Đã kéo dài thời gian để vừa kịp tan biến chậm)
         const timeline = [
-            { text: "3", duration: 1000 },
-            { text: "2", duration: 1000 },
-            { text: "1", duration: 1000 },
-            { text: "Anh thật sự thích em", duration: 2500 },
-            { text: "Anh muốn yêu em nghiêm túc", duration: 2600 },
-            { text: "Em đồng ý...", duration: 2300 },
-            { text: "Làm người yêu anh nhé ❤️", duration: 2800 }
+            { text: "3", duration: 1200, isNumber: true },
+            { text: "2", duration: 1200, isNumber: true },
+            { text: "1", duration: 1200, isNumber: true },
+            { text: "Anh thật sự thích em", duration: 3000, isNumber: false },
+            { text: "Anh muốn yêu em nghiêm túc", duration: 3100, isNumber: false },
+            { text: "Em đồng ý...", duration: 2800, isNumber: false },
+            { text: "Làm người yêu anh nhé ❤️", duration: 3300, isNumber: false }
         ];
 
         let msgIndex = 0;
@@ -154,7 +154,7 @@
         let pulseTime = 0;
         let textGlowTimer = 0;
 
-        // 2. Matrix Rain Nền (Chạy liên tục xuyên suốt)
+        // 2. Matrix Rain Nền
         let matrixDrops = [];
         const matrixChars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*❤️";
 
@@ -170,7 +170,7 @@
             ctx.fillStyle = 'rgba(3, 0, 5, 0.22)';
             ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = 'rgba(255, 182, 193, 0.28)'; // Mưa mã màu hồng mờ dịu
+            ctx.fillStyle = 'rgba(255, 182, 193, 0.28)';
             ctx.font = '14px monospace';
 
             for (let i = 0; i < matrixDrops.length; i++) {
@@ -187,7 +187,7 @@
             }
         }
 
-        // Hàm vẽ hình trái tim nhỏ chuẩn canvas
+        // Vẽ trái tim nhỏ
         function drawSmallHeart(cx, cy, size, color, alpha) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, alpha);
@@ -198,7 +198,6 @@
             ctx.beginPath();
             const topCurveHeight = size * 0.3;
             ctx.moveTo(cx, cy + size * 0.3);
-            // Nửa bên trái
             ctx.bezierCurveTo(
                 cx, cy, 
                 cx - size / 2, cy - size / 2, 
@@ -209,7 +208,6 @@
                 cx, cy + size, 
                 cx, cy + size
             );
-            // Nửa bên phải
             ctx.bezierCurveTo(
                 cx, cy + size, 
                 cx + size / 2, cy + (size + topCurveHeight) / 2, 
@@ -224,12 +222,12 @@
             ctx.restore();
         }
 
-        // 3. Hạt hội tụ chữ & Trái tim viền các Trái tim nhỏ lấp lánh
+        // 3. Hạt hội tụ chữ
         let particles = [];
         let heartOutlineHearts = [];
         let isExploding = false;
 
-        function createTextParticles(text) {
+        function createTextParticles(item) {
             particles = [];
             isExploding = false;
 
@@ -241,17 +239,20 @@
             offCtx.fillStyle = '#000';
             offCtx.fillRect(0, 0, width, height);
 
-            let fontSize = Math.min(width / (text.length * 0.7), 65);
-            if (text.length <= 2) fontSize = 120;
+            let fontSize = Math.min(width / (item.text.length * 0.7), 65);
+            if (item.isNumber) fontSize = 120;
 
             offCtx.fillStyle = '#fff';
             offCtx.font = `bold ${fontSize}px sans-serif`;
             offCtx.textAlign = 'center';
             offCtx.textBaseline = 'middle';
-            offCtx.fillText(text, width / 2, height / 2);
+            offCtx.fillText(item.text, width / 2, height / 2);
 
             const imgData = offCtx.getImageData(0, 0, width, height).data;
             const step = Math.max(2, Math.floor(width / 240));
+
+            // Đổi màu: Số đếm màu Trắng (#ffffff), Lời chúc màu Hồng (#ff758f)
+            const particleColor = item.isNumber ? '#ffffff' : '#ff758f';
 
             for (let y = 0; y < height; y += step) {
                 for (let x = 0; x < width; x += step) {
@@ -264,34 +265,30 @@
                             targetY: y,
                             vx: 0,
                             vy: 0,
-                            size: 1.8,
+                            size: item.isNumber ? 2.2 : 1.8,
                             alpha: 1,
-                            color: text.length <= 2 ? '#ff4d6d' : '#ffffff'
+                            color: particleColor
                         });
                     }
                 }
             }
         }
 
-        // Khởi tạo trái tim lớn có viền được xếp bằng các TRÁI TIM NHỎ lấp lánh
         function setupHeartPhase() {
             heartOutlineHearts = [];
             isHeartPhase = true;
 
             const scale = Math.min(width, height) / 32;
-            const count = 180; // Số lượng trái tim nhỏ trên đường viền
+            const count = 180;
 
             for (let i = 0; i < count; i++) {
                 const t = (i / count) * Math.PI * 2;
-                // Công thức đường cong trái tim
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                // Độ lệch ngẫu nhiên nhẹ tạo đường viền tự nhiên & dặn đặn
                 const scatterX = (Math.random() - 0.5) * 0.5;
                 const scatterY = (Math.random() - 0.5) * 0.5;
 
-                // Màu sắc chuyển đổi giữa Hồng Neon, Đỏ Tình Yêu & Trắng Lấp Lánh
                 let hColor = '#ff4d6d';
                 if (Math.random() > 0.45) hColor = '#ff8fa3';
                 if (Math.random() > 0.8) hColor = '#ffffff';
@@ -301,7 +298,7 @@
                     baseY: (y + scatterY) * scale,
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    size: Math.random() * 8 + 7, // Kích thước trái tim nhỏ
+                    size: Math.random() * 8 + 7,
                     alpha: Math.random() * 0.8 + 0.2,
                     twinkleSpeed: Math.random() * 0.05 + 0.02,
                     color: hColor
@@ -309,11 +306,12 @@
             }
         }
 
+        // Tốc độ tan biến nhẹ nhàng & chậm hơn
         function triggerDissolve() {
             isExploding = true;
             for (let p of particles) {
-                p.vx = (Math.random() - 0.5) * 6;
-                p.vy = (Math.random() - 0.5) * 6;
+                p.vx = (Math.random() - 0.5) * 2.5; // Giảm vận tốc văng
+                p.vy = (Math.random() - 0.5) * 2.5;
             }
         }
 
@@ -321,19 +319,20 @@
             if (!isHeartPhase) {
                 for (let p of particles) {
                     if (!isExploding) {
-                        p.x += (p.targetX - p.x) * 0.14;
-                        p.y += (p.targetY - p.y) * 0.14;
+                        p.x += (p.targetX - p.x) * 0.12;
+                        p.y += (p.targetY - p.y) * 0.12;
                     } else {
                         p.x += p.vx;
                         p.y += p.vy;
-                        p.alpha -= 0.035;
+                        p.alpha -= 0.015; // Giảm tốc độ mờ dần giúp hạt tan chậm hơn
                     }
 
                     if (p.alpha > 0) {
                         ctx.save();
-                        ctx.shadowBlur = 8;
+                        ctx.shadowBlur = p.color === '#ffffff' ? 12 : 8;
                         ctx.shadowColor = p.color;
                         ctx.fillStyle = p.color;
+                        ctx.globalAlpha = Math.max(0, p.alpha);
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                         ctx.fill();
@@ -342,12 +341,10 @@
                 }
             } else {
                 pulseTime += 0.035;
-                textGlowTimer += 0.05;
+                textGlowTimer += 0.04;
 
-                // Nhịp đập trái tim phập phồng nhẹ nhàng lãng mạn
                 const beatScale = 1 + Math.sin(pulseTime) * 0.03;
 
-                // 1. Vẽ các TRÁI TIM NHỎ tạo thành đường viền trái tim lớn
                 for (let hp of heartOutlineHearts) {
                     const targetX = width / 2 + hp.baseX * beatScale;
                     const targetY = height / 2 + hp.baseY * beatScale;
@@ -363,22 +360,21 @@
                     drawSmallHeart(hp.x, hp.y, hp.size, hp.color, hp.alpha);
                 }
 
-                // 2. Vẽ chữ "Anh Yêu Linh" NỔI BẬT & LẤP LÁNH ở trung tâm trái tim
+                // Chữ "Mãi Yêu Linh" thu nhỏ vừa vặn & Tỏa sáng lung linh
                 ctx.save();
-                let fontSize = Math.min(width / 12, 48); // Font to rõ hơn
+                let fontSize = Math.min(width / 18, 32); // Kích thước gọn gàng nằm trọn trong lòng trái tim
                 ctx.font = `bold ${fontSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
 
-                // Độ phát sáng lấp lánh biến đổi theo thời gian
-                const glowIntensity = 15 + Math.sin(textGlowTimer) * 10;
+                // Tạo nhiều lớp Glow sáng dịu lấp lánh
+                const glowIntensity = 20 + Math.sin(textGlowTimer) * 12;
                 ctx.shadowBlur = glowIntensity;
                 ctx.shadowColor = '#ff4d6d';
 
-                // Gradient màu chữ Hồng Trắng Ánh Kim rực rỡ
                 const gradient = ctx.createLinearGradient(
-                    width / 2 - 100, height / 2 - 20, 
-                    width / 2 + 100, height / 2 + 20
+                    width / 2 - 80, height / 2, 
+                    width / 2 + 80, height / 2
                 );
                 gradient.addColorStop(0, '#ffffff');
                 gradient.addColorStop(0.5, '#ffb6c1');
@@ -393,15 +389,16 @@
         function processNextStep() {
             if (msgIndex < timeline.length) {
                 const current = timeline[msgIndex];
-                createTextParticles(current.text);
+                createTextParticles(current);
                 msgIndex++;
 
-                const dissolveTime = current.text.length <= 2 ? 120 : 380;
+                // Thời gian chữ tan biến chuyển cảnh mượt mà
+                const dissolveDuration = 600;
 
                 setTimeout(() => {
                     triggerDissolve();
-                    setTimeout(processNextStep, dissolveTime);
-                }, current.duration - dissolveTime);
+                    setTimeout(processNextStep, dissolveDuration);
+                }, current.duration - dissolveDuration);
             } else {
                 setupHeartPhase();
             }
