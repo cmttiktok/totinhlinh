@@ -32,7 +32,6 @@
             z-index: 1;
         }
 
-        /* Màn hình nhắc xoay ngang thiết bị */
         #rotate-notice {
             display: none;
             position: fixed;
@@ -59,8 +58,7 @@
         }
 
         #rotate-notice p {
-            font-size: 1rem;
-            letter-spacing: 0.5px;
+            font-size: 1.1rem;
             color: rgba(255, 255, 255, 0.85);
         }
 
@@ -73,17 +71,17 @@
         #start-btn {
             position: absolute;
             z-index: 10;
-            padding: 14px 30px;
-            font-size: 1.1rem;
-            font-weight: 500;
+            padding: 16px 36px;
+            font-size: 1.2rem;
+            font-weight: 600;
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 30px;
             cursor: pointer;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 25px rgba(255, 255, 255, 0.25);
             transition: all 0.3s ease;
         }
 
@@ -95,7 +93,6 @@
 </head>
 <body>
 
-    <!-- Thông báo xoay ngang -->
     <div id="rotate-notice">
         <svg viewBox="0 0 24 24">
             <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
@@ -126,7 +123,6 @@
             checkOrientation();
         }
 
-        // Kiểm tra chiều màn hình (Nếu màn hình dọc thì hiện thông báo xoay)
         function checkOrientation() {
             if (window.innerHeight > window.innerWidth) {
                 rotateNotice.style.display = 'flex';
@@ -139,30 +135,29 @@
         window.addEventListener('resize', () => {
             setupCanvas();
             initMatrix();
-            initStars();
+            initSnowflakes();
         });
 
-        // Danh sách nội dung hiển thị
-        const messages = [
-            "3",
-            "2",
-            "1",
-            "Anh thật sự thích em",
-            "Anh muốn yêu em nghiêm túc",
-            "Em đồng ý...",
-            "Làm người yêu anh nhé"
+        // Danh sách thông điệp & thời gian hiển thị riêng cho từng câu (ms)
+        const timeline = [
+            { text: "3", duration: 1000 },
+            { text: "2", duration: 1000 },
+            { text: "1", duration: 1000 },
+            { text: "Anh thật sự thích em", duration: 2500 },
+            { text: "Anh muốn yêu em nghiêm túc", duration: 2600 },
+            { text: "Em đồng ý...", duration: 2300 },
+            { text: "Làm người yêu anh nhé ❤️", duration: 3000 }
         ];
 
         let msgIndex = 0;
         let isRunning = false;
-        let isHeartState = false;
 
-        // 1. Cấu hình Matrix Rain (Mã trận)
+        // 1. Matrix Rain Nền
         let matrixDrops = [];
         const chars = "0123456789ABCDEFHIJKLMNOPQRSTUVWXYZ@#$%&*";
 
         function initMatrix() {
-            const columns = Math.floor(width / 16);
+            const columns = Math.floor(width / 18);
             matrixDrops = [];
             for (let i = 0; i < columns; i++) {
                 matrixDrops[i] = Math.random() * -50;
@@ -173,13 +168,13 @@
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-            ctx.font = '14px monospace';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.font = '15px monospace';
 
             for (let i = 0; i < matrixDrops.length; i++) {
                 const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                const x = i * 16;
-                const y = matrixDrops[i] * 16;
+                const x = i * 18;
+                const y = matrixDrops[i] * 18;
 
                 ctx.fillText(text, x, y);
 
@@ -190,39 +185,51 @@
             }
         }
 
-        // 2. Cấu hình Ngôi sao lấp lánh (Sparkling Stars)
-        let stars = [];
-        function initStars() {
-            stars = [];
-            const starCount = 80;
-            for (let i = 0; i < starCount; i++) {
-                stars.push({
+        // 2. Hiệu ứng Bông Tuyết rơi (Snowflakes)
+        let snowflakes = [];
+        function initSnowflakes() {
+            snowflakes = [];
+            const flakeCount = 45;
+            for (let i = 0; i < flakeCount; i++) {
+                snowflakes.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    size: Math.random() * 2 + 0.5,
-                    alpha: Math.random(),
-                    speed: Math.random() * 0.02 + 0.005
+                    radius: Math.random() * 3 + 2, // Kích thước bông tuyết to rõ
+                    speedY: Math.random() * 0.8 + 0.3,
+                    speedX: Math.random() * 0.5 - 0.25,
+                    alpha: Math.random() * 0.6 + 0.4
                 });
             }
         }
 
-        function drawStars() {
-            for (let s of stars) {
-                s.alpha += s.speed;
-                if (s.alpha > 1 || s.alpha < 0) s.speed = -s.speed;
-
-                ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(s.alpha)})`;
+        function drawSnowflakes() {
+            ctx.fillStyle = '#ffffff';
+            for (let flake of snowflakes) {
+                ctx.save();
+                ctx.globalAlpha = flake.alpha;
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.restore();
+
+                flake.y += flake.speedY;
+                flake.x += flake.speedX;
+
+                if (flake.y > height) {
+                    flake.y = -10;
+                    flake.x = Math.random() * width;
+                }
             }
         }
 
-        // 3. Cấu hình Hạt đính kết tạo chữ và trái tim
-        let textParticles = [];
+        // 3. Hiệu ứng Hạt hội tụ & Tan biến (Dissolve Particle Effect)
+        let particles = [];
+        let isExploding = false;
+
         function createTextParticles(text) {
-            textParticles = [];
-            
+            particles = [];
+            isExploding = false;
+
             const offscreen = document.createElement('canvas');
             offscreen.width = width;
             offscreen.height = height;
@@ -231,8 +238,9 @@
             offCtx.fillStyle = '#000';
             offCtx.fillRect(0, 0, width, height);
 
-            let fontSize = Math.min(width / (text.length * 0.8), 50);
-            if (text.length <= 2) fontSize = 90;
+            // Tăng font chữ to hơn hẳn
+            let fontSize = Math.min(width / (text.length * 0.65), 65);
+            if (text.length <= 2) fontSize = 130; // Chữ số 3, 2, 1 rất to
 
             offCtx.fillStyle = '#fff';
             offCtx.font = `bold ${fontSize}px sans-serif`;
@@ -241,19 +249,21 @@
             offCtx.fillText(text, width / 2, height / 2);
 
             const imgData = offCtx.getImageData(0, 0, width, height).data;
-            const step = Math.max(2, Math.floor(width / 220));
+            const step = Math.max(2, Math.floor(width / 240));
 
             for (let y = 0; y < height; y += step) {
                 for (let x = 0; x < width; x += step) {
                     const idx = (y * width + x) * 4;
                     if (imgData[idx] > 180) {
-                        textParticles.push({
+                        particles.push({
                             x: Math.random() * width,
                             y: Math.random() * height,
                             targetX: x,
                             targetY: y,
-                            size: 1.5,
-                            alpha: Math.random() * 0.5 + 0.5
+                            vx: 0,
+                            vy: 0,
+                            size: 1.8,
+                            alpha: 1
                         });
                     }
                 }
@@ -261,46 +271,72 @@
         }
 
         function createHeartParticles() {
-            textParticles = [];
-            const scale = Math.min(width, height) / 38;
-            const particleCount = 1200;
+            particles = [];
+            isExploding = false;
+
+            const scale = Math.min(width, height) / 34;
+            const particleCount = 1400;
 
             for (let i = 0; i < particleCount; i++) {
                 const t = Math.random() * Math.PI * 2;
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-                textParticles.push({
+                particles.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
                     targetX: width / 2 + x * scale,
                     targetY: height / 2 + y * scale,
+                    vx: 0,
+                    vy: 0,
                     size: Math.random() * 2 + 1,
-                    alpha: Math.random() * 0.7 + 0.3
+                    alpha: 1
                 });
             }
         }
 
-        function drawParticles() {
-            for (let p of textParticles) {
-                p.x += (p.targetX - p.x) * 0.12;
-                p.y += (p.targetY - p.y) * 0.12;
-
-                ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
+        // Kích hoạt hiệu ứng vỡ hạt tan biến
+        function triggerDissolve() {
+            isExploding = true;
+            for (let p of particles) {
+                p.vx = (Math.random() - 0.5) * 6;
+                p.vy = (Math.random() - 0.5) * 6;
             }
         }
 
-        function showNextMessage() {
-            if (msgIndex < messages.length) {
-                createTextParticles(messages[msgIndex]);
+        function drawParticles() {
+            for (let p of particles) {
+                if (!isExploding) {
+                    p.x += (p.targetX - p.x) * 0.14;
+                    p.y += (p.targetY - p.y) * 0.14;
+                } else {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= 0.035; // Mờ dần khi vỡ ra
+                }
+
+                if (p.alpha > 0) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, p.alpha)})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function processNextStep() {
+            if (msgIndex < timeline.length) {
+                const current = timeline[msgIndex];
+                createTextParticles(current.text);
                 msgIndex++;
-                setTimeout(showNextMessage, 2800);
+
+                // Chờ hiển thị xong thì kích hoạt hiệu ứng tan biến trước khi sang câu mới
+                setTimeout(() => {
+                    triggerDissolve();
+                    setTimeout(processNextStep, 450); // Khoảng dừng ngắn cho hiệu ứng tan biến
+                }, current.duration - 450);
             } else {
                 createHeartParticles();
-                isHeartState = true;
             }
         }
 
@@ -308,19 +344,18 @@
             startBtn.style.display = 'none';
             isRunning = true;
             initMatrix();
-            initStars();
+            initSnowflakes();
 
             setTimeout(() => {
-                showNextMessage();
-            }, 1800);
+                processNextStep();
+            }, 1200);
         }
 
-        // Vòng lặp Render liên tục
         function loop() {
             if (isRunning) {
-                drawMatrix();     // Nền số Matrix luôn chảy
-                drawStars();      // Các ngôi sao luôn lấp lánh
-                drawParticles();  // Chữ / Trái tim hội tụ
+                drawMatrix();
+                drawSnowflakes();
+                drawParticles();
             }
             requestAnimationFrame(loop);
         }
